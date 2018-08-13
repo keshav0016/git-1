@@ -1624,12 +1624,31 @@ int for_each_loose_file_in_objdir_buf(struct strbuf *path,
 				      void *data);
 
 /*
- * Iterate over loose objects in both the local
- * repository and any alternates repositories (unless the
- * LOCAL_ONLY flag is set).
+ * Flags for for_each_*_object(), including for_each_loose below and
+ * for_each_packed in packfile.h.
  */
-#define FOR_EACH_OBJECT_LOCAL_ONLY 0x1
-extern int for_each_loose_object(each_loose_object_fn, void *, unsigned flags);
+enum for_each_object_flags {
+	/* Iterate only over local objects, not alternates. */
+	FOR_EACH_OBJECT_LOCAL_ONLY = (1<<0),
+
+	/* Only iterate over packs obtained from the promisor remote. */
+	FOR_EACH_OBJECT_PROMISOR_ONLY = (1<<1),
+
+	/*
+	 * Visit objects within a pack in packfile order rather than .idx order
+	 */
+	FOR_EACH_OBJECT_PACK_ORDER = (1<<2),
+};
+
+/*
+ * Iterate over all accessible loose objects without respect to
+ * reachability. By default, this includes both local and alternate objects.
+ * The order in which objects are visited is unspecified.
+ *
+ * Any flags specific to packs are ignored.
+ */
+int for_each_loose_object(each_loose_object_fn, void *,
+			  enum for_each_object_flags flags);
 
 /*
  * Set this to 0 to prevent sha1_object_info_extended() from fetching missing

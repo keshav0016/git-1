@@ -158,21 +158,24 @@ extern int has_object_pack(const struct object_id *oid);
 extern int has_pack_index(const unsigned char *sha1);
 
 /*
- * Only iterate over packs obtained from the promisor remote.
- */
-#define FOR_EACH_OBJECT_PROMISOR_ONLY 2
-
-/*
- * Iterate over packed objects in both the local
- * repository and any alternates repositories (unless the
- * FOR_EACH_OBJECT_LOCAL_ONLY flag, defined in cache.h, is set).
+ * Iterate over all accessible packed objects without respect to reachability.
+ * By default, this includes both local and alternate packs.
+ *
+ * Note that some objects may appear twice if they are found in multiple packs.
+ * Each pack is visited in an unspecified order. By default, objects within a
+ * pack are visited in pack-idx order (i.e., sorted by oid).
+ *
+ * The list of flags can be found in cache.h.
  */
 typedef int each_packed_object_fn(const struct object_id *oid,
 				  struct packed_git *pack,
 				  uint32_t pos,
 				  void *data);
-extern int for_each_object_in_pack(struct packed_git *p, each_packed_object_fn, void *data);
-extern int for_each_packed_object(each_packed_object_fn, void *, unsigned flags);
+int for_each_object_in_pack(struct packed_git *p,
+			    each_packed_object_fn, void *data,
+			    enum for_each_object_flags flags);
+int for_each_packed_object(each_packed_object_fn, void *,
+			   enum for_each_object_flags flags);
 
 /*
  * Return 1 if an object in a promisor packfile is or refers to the given
